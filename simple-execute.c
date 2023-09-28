@@ -6,8 +6,8 @@
 #include <unistd.h>
 
 // Group member 1: TSUI, Hiu Kei (1155174948)
-// Group member 2: <Peter> (11551)
-// Group member 3: <Daniel> (11551)
+// Group member 2: TSANG, Cheuk Hang (1155167650)
+// Group member 3: WONG, Chun Yin (1155175977)
 
 int shell_execute(char ** args, int argc)
 {
