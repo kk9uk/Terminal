@@ -69,7 +69,7 @@ int shell_execute(char ** args, int argc)
         else {
             // TODO: PIPE
             printf("Let's PIPE!\n");
-	    exit(0);
+            exit(0);
         }
 	}
 	else
