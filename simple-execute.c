@@ -13,19 +13,25 @@
 int shell_execute(char ** args, int argc)
 {
 	int child_pid, wait_return, status;
+    int no_of_commands = 1;
+    int *length_of_command;
+    char ***arguments_of_command;
 
 	if (strcmp(args[0], "EXIT") == 0)
 		return -1; 
 
     /* HANDLE INPUT */
     // 1. Check how many commands
-    int no_of_commands = 1;
     for (int i = 0; i < argc - 1; i++)
         if (strcmp(args[i], "|") == 0) no_of_commands++;
-    printf("no_of_commands: %d\n", no_of_commands);
+        /* DEBUG */
+        /* printf("no_of_commands: %d\n", no_of_commands); */
 
     // 2. Count command lengths
-    int *length_of_command = calloc(no_of_commands, sizeof(int));
+    if ((length_of_command = calloc(no_of_commands, sizeof(int))) == NULL) {
+        printf("calloc() error for length_of_command\n");
+        exit(-1);
+    }
     for (int i = 0, k = 0; i < argc - 1 && k < no_of_commands; i++) {
         if (strcmp(args[i], "|") == 0) {
             k++;
@@ -33,25 +39,34 @@ int shell_execute(char ** args, int argc)
         }
         length_of_command[k]++;
     }
-    printf("length_of_command: ");
-    for (int k = 0; k < no_of_commands; k++) printf("%d ", length_of_command[k]);
-    printf("\n");
+        /* DEBUG */
+        /* printf("length_of_command: ");
+        for (int k = 0; k < no_of_commands; k++)
+            printf("%d ", length_of_command[k]);
+        printf("\n"); */
 
     // 3. Pack commands' arguments
-    char ***arguments_of_command = calloc(no_of_commands, sizeof(char **));
+    if ((arguments_of_command = calloc(no_of_commands, sizeof(char **))) == NULL) {
+        printf("calloc() error for arguments_of_command\n");
+        exit(-1);
+    }
     for (int k = 0, i = 0; k < no_of_commands && i < argc - 1; k++) {
-        arguments_of_command[k] = calloc(length_of_command[k], sizeof(char *));
+        if ((arguments_of_command[k] = calloc(length_of_command[k], sizeof(char *))) == NULL) {
+            printf("calloc() error for arguments_of_command[%d]\n", k);
+            exit(-1);
+        }
         for (int _ = 0; _ < length_of_command[k]; _++, i++)
             arguments_of_command[k][_] = args[i];
         i++;
     }
-    printf("\n");
-    for (int i = 0; i < no_of_commands; i++) {
-        for (int j = 0; j < length_of_command[i]; j++)
-            printf("%s\t", arguments_of_command[i][j]);
-        printf("\n");
-    }
-    printf("\n");
+        /* DEBUG */
+        /* printf("\n");
+        for (int i = 0; i < no_of_commands; i++) {
+            for (int j = 0; j < length_of_command[i]; j++)
+                printf("%s\t", arguments_of_command[i][j]);
+            printf("\n");
+        }
+        printf("\n"); */
 
 	if((child_pid = fork()) < 0)
 	{
@@ -77,6 +92,12 @@ int shell_execute(char ** args, int argc)
 		if ((wait_return = wait(&status)) < 0)
 			printf("wait() error \n"); 
 	}
+
+    /* FREE MEMORY */
+    free(length_of_command);
+    for (int k = 0; k < no_of_commands; k++)
+        free(arguments_of_command[k]);
+    free(arguments_of_command);
 			
 	return 0;
 
