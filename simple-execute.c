@@ -12,8 +12,7 @@
 // NULL is always the ending argument & argc counts it too
 int shell_execute(char ** args, int argc)
 {
-	int child_pid, wait_return, status;
-    int no_of_commands = 1;
+	int child_pid, wait_return, status, no_of_commands = 1;
     int *length_of_command;
     char ***arguments_of_command;
 
@@ -25,7 +24,7 @@ int shell_execute(char ** args, int argc)
     for (int i = 0; i < argc - 1; i++)
         if (strcmp(args[i], "|") == 0) no_of_commands++;
         /* DEBUG */
-        /* printf("no_of_commands: %d\n", no_of_commands); */
+        // printf("no_of_commands: %d\n", no_of_commands);
 
     // 2. Count command lengths
     if ((length_of_command = calloc(no_of_commands, sizeof(int))) == NULL) {
@@ -40,10 +39,10 @@ int shell_execute(char ** args, int argc)
         length_of_command[k]++;
     }
         /* DEBUG */
-        /* printf("length_of_command: ");
-        for (int k = 0; k < no_of_commands; k++)
-            printf("%d ", length_of_command[k]);
-        printf("\n"); */
+        // printf("length_of_command: ");
+        // for (int k = 0; k < no_of_commands; k++)
+        //     printf("%d ", length_of_command[k]);
+        // printf("\n");
 
     // 3. Pack commands' arguments
     if ((arguments_of_command = calloc(no_of_commands, sizeof(char **))) == NULL) {
@@ -60,13 +59,13 @@ int shell_execute(char ** args, int argc)
         i++;
     }
         /* DEBUG */
-        /* printf("\n");
-        for (int i = 0; i < no_of_commands; i++) {
-            for (int j = 0; j < length_of_command[i]; j++)
-                printf("%s\t", arguments_of_command[i][j]);
-            printf("\n");
-        }
-        printf("\n"); */
+        // printf("\n");
+        // for (int i = 0; i < no_of_commands; i++) {
+        //     for (int j = 0; j < length_of_command[i]; j++)
+        //         printf("%s\t", arguments_of_command[i][j]);
+        //     printf("\n");
+        // }
+        // printf("\n");
 
 	if((child_pid = fork()) < 0)
 	{
@@ -82,8 +81,81 @@ int shell_execute(char ** args, int argc)
 		    }
         }
         else {
-            // TODO: PIPE
-            printf("Let's PIPE!\n");
+            int **pipe_of_command;
+
+            /* PIPE */
+            // 1. Create pipes
+            if ((pipe_of_command = calloc(no_of_commands - 1, sizeof(int *))) == NULL) {
+                printf("calloc() error for pipe_of_command\n");
+                exit(-1);
+            }
+            for (int i = 0; i < no_of_commands - 1; i++) {
+                if ((pipe_of_command[i] = calloc(2, sizeof(int))) == NULL) {
+                    printf("calloc() error for pipe_of_command[%d]\n", i);
+                    exit(-1);
+                }
+                if (pipe(pipe_of_command[i]) == -1) {
+                    printf("pipe() error for pipe_of_command[%d]\n", i);
+                    exit(-1);
+                }
+            }
+
+            // 2. DIE FOR ME, SON!
+            for (int i = 0; i < no_of_commands; i++) {
+                if ((child_pid = fork()) < 0) {
+                    printf("fork() error for %dth son\n", i);
+                    exit(-1);
+                }
+                else if (child_pid == 0) {
+                    /* SON */
+                    // 1. I/O redirection
+                    if (i != 0) {
+                        close(STDIN_FILENO);
+                        if (dup(pipe_of_command[i - 1][0]) != STDIN_FILENO) {
+                            printf("dup() error for %dth command's input\n", i);
+                            exit(-1);
+                        }
+                    }
+
+                    if (i != no_of_commands - 1) {
+                        close(STDOUT_FILENO);
+                        if (dup(pipe_of_command[i][1]) != STDOUT_FILENO) {
+                            printf("dup() error for %dth command's output\n", i);
+                            exit(-1);
+                        }
+                    }
+
+                    /* CLOSE FILE */
+                    for (int j = 0; j < no_of_commands - 1; j++) {
+                        close(pipe_of_command[j][0]);
+                        close(pipe_of_command[j][1]);
+                    }
+
+                    // 2. DIE FOR THE SUPREME LEADER!
+                    if (execvp(arguments_of_command[i][0], arguments_of_command[i]) < 0) {
+                        printf("execvp() error for %dth son\n", i);
+                        exit(-1);
+                    }
+                }
+            }
+
+            /* CLOSE FILE */
+            for (int i = 0; i < no_of_commands - 1; i++) {
+                close(pipe_of_command[i][0]);
+                close(pipe_of_command[i][1]);
+            }
+
+            // 3. Wait till all son died
+            for (int i = 0; i < no_of_commands; i++)
+                if ((wait_return = wait(&status)) < 0) {
+                    printf("wait() error for %dth son\n", i);
+                    exit(-1);
+                }
+
+            /* FREE MEMORY */
+            for (int i = 0; i < no_of_commands - 1; i++) free(pipe_of_command[i]);
+            free(pipe_of_command);
+
             exit(0);
         }
 	}
@@ -95,8 +167,7 @@ int shell_execute(char ** args, int argc)
 
     /* FREE MEMORY */
     free(length_of_command);
-    for (int k = 0; k < no_of_commands; k++)
-        free(arguments_of_command[k]);
+    for (int k = 0; k < no_of_commands; k++) free(arguments_of_command[k]);
     free(arguments_of_command);
 			
 	return 0;
