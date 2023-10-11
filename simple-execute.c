@@ -50,12 +50,13 @@ int shell_execute(char ** args, int argc)
         exit(-1);
     }
     for (int k = 0, i = 0; k < no_of_commands && i < argc - 1; k++) {
-        if ((arguments_of_command[k] = calloc(length_of_command[k], sizeof(char *))) == NULL) {
+        if ((arguments_of_command[k] = calloc(length_of_command[k] + 1, sizeof(char *))) == NULL) {
             printf("calloc() error for arguments_of_command[%d]\n", k);
             exit(-1);
         }
         for (int _ = 0; _ < length_of_command[k]; _++, i++)
             arguments_of_command[k][_] = args[i];
+        arguments_of_command[k][length_of_command[k]] = NULL;
         i++;
     }
         /* DEBUG */
