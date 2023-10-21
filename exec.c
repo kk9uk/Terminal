@@ -5,10 +5,6 @@
 #include <errno.h>
 #include <unistd.h>
 
-// Group member 1: TSUI, Hiu Kei (1155174948)
-// Group member 2: TSANG, Cheuk Hang (1155167650)
-// Group member 3: WONG, Chun Yin (1155175977)
-
 // NULL is always the ending argument & argc counts it too
 int shell_execute(char ** args, int argc)
 {
@@ -16,7 +12,7 @@ int shell_execute(char ** args, int argc)
     int *length_of_command;
     char ***arguments_of_command;
 
-	if (strcmp(args[0], "EXIT") == 0)
+	if (strcmp(args[0], "exit") == 0)
 		return -1; 
 
     /* HANDLE INPUT */
@@ -104,7 +100,7 @@ int shell_execute(char ** args, int argc)
             // 2. DIE FOR ME, SON!
             for (int i = 0; i < no_of_commands; i++) {
                 if ((child_pid = fork()) < 0) {
-                    printf("fork() error for %dth son\n", i);
+                    printf("fork() error for %dth son\n", i + 1);
                     exit(-1);
                 }
                 else if (child_pid == 0) {
@@ -113,7 +109,7 @@ int shell_execute(char ** args, int argc)
                     if (i != 0) {
                         close(STDIN_FILENO);
                         if (dup(pipe_of_command[i - 1][0]) != STDIN_FILENO) {
-                            printf("dup() error for %dth command's input\n", i);
+                            printf("dup() error for %dth command's input\n", i + 1);
                             exit(-1);
                         }
                     }
@@ -121,7 +117,7 @@ int shell_execute(char ** args, int argc)
                     if (i != no_of_commands - 1) {
                         close(STDOUT_FILENO);
                         if (dup(pipe_of_command[i][1]) != STDOUT_FILENO) {
-                            printf("dup() error for %dth command's output\n", i);
+                            printf("dup() error for %dth command's output\n", i + 1);
                             exit(-1);
                         }
                     }
@@ -134,7 +130,7 @@ int shell_execute(char ** args, int argc)
 
                     // 2. DIE FOR THE SUPREME LEADER!
                     if (execvp(arguments_of_command[i][0], arguments_of_command[i]) < 0) {
-                        printf("execvp() error for %dth son\n", i);
+                        printf("execvp() error for %dth son\n", i + 1);
                         exit(-1);
                     }
                 }
@@ -149,7 +145,7 @@ int shell_execute(char ** args, int argc)
             // 3. Wait till all son died
             for (int i = 0; i < no_of_commands; i++)
                 if ((wait_return = wait(&status)) < 0) {
-                    printf("wait() error for %dth son\n", i);
+                    printf("wait() error for %dth son\n", i + 1);
                     exit(-1);
                 }
 
