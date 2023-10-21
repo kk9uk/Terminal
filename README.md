@@ -1,3 +1,4 @@
 ## Usage
 `$ make`  
-`$ ./Terminal`
+`$ ./Terminal`  
+`$ make clean`
