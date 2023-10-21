@@ -20,11 +20,6 @@ int main(void)
   char ** cmd_args;
   int argc, char_num, status;
 
-  printf("---------------------------------------------------------\n");
-  printf("|Simple Shell Program for CSCI 3150 (Zili Shao@CSE,CUHK)|\n");
-  printf("---------------------------------------------------------\n");
-  printf("\nUsage: Input a command for execution or EXIT for exit. \n\n");
-
   /* Intialize*/
   if ((cmd_line = malloc(MAX_LINE_SIZE)) == NULL) {
     printf("malloc() error for cmd_line\n");
@@ -38,8 +33,8 @@ int main(void)
 
 
   while(1){
-    //Print the prompt "$$$"
-    printf("$$$ ");
+    //Print the prompt "~>"
+    printf("~> ");
     // Intialize command line & command args
     memset(cmd_line, 0 , MAX_LINE_SIZE);
     memset(cmd_args, 0 , MAX_ARG_NUM);
